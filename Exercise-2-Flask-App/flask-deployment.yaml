@@ -1,0 +1,23 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  # Run one copy of the Flask application for this exercise.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app
+          image: flask-app:latest
+          # Use the image we loaded into Minikube.
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 15000
