@@ -1,0 +1,15 @@
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-k8s
+  labels:
+    # This label helps the Service find the correct Pod.
+    run: hello-k8s
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      # Nginx listens for HTTP requests on port 80.
+      ports:
+        - containerPort: 80
