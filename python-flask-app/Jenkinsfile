@@ -4,15 +4,21 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Installing dependencies...'
-                sh 'python3 -m pip install -r requirements.txt'
+                echo 'Creating virtual environment and installing dependencies...'
+                sh '''
+                    python3 -m venv .venv
+                    .venv/bin/python -m pip install --upgrade pip
+                    .venv/bin/python -m pip install -r python-flask-app/requirements.txt
+                '''
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                sh 'python3 -m unittest discover -s .'
+                sh '''
+                    .venv/bin/python -m unittest discover -s python-flask-app -p "test_app.py"
+                '''
             }
         }
 
@@ -20,8 +26,9 @@ pipeline {
             steps {
                 echo 'Deploying application...'
                 sh '''
-                    mkdir -p ${WORKSPACE}/python-app-deploy
-                    cp ${WORKSPACE}/app.py ${WORKSPACE}/python-app-deploy/
+                    mkdir -p "${WORKSPACE}/python-app-deploy"
+                    cp python-flask-app/app.py "${WORKSPACE}/python-app-deploy/"
+                    cp python-flask-app/requirements.txt "${WORKSPACE}/python-app-deploy/"
                 '''
             }
         }
@@ -30,8 +37,10 @@ pipeline {
             steps {
                 echo 'Starting application...'
                 sh '''
-                    nohup python3 ${WORKSPACE}/python-app-deploy/app.py > ${WORKSPACE}/python-app-deploy/app.log 2>&1 &
-                    echo $! > ${WORKSPACE}/python-app-deploy/app.pid
+                    nohup "${WORKSPACE}/.venv/bin/python" "${WORKSPACE}/python-app-deploy/app.py" > "${WORKSPACE}/python-app-deploy/app.log" 2>&1 &
+                    echo $! > "${WORKSPACE}/python-app-deploy/app.pid"
+                    sleep 3
+                    cat "${WORKSPACE}/python-app-deploy/app.log"
                 '''
             }
         }
@@ -39,7 +48,9 @@ pipeline {
         stage('Test Application') {
             steps {
                 echo 'Testing application...'
-                sh 'python3 test_app.py'
+                sh '''
+                    .venv/bin/python -m unittest discover -s python-flask-app -p "test_app.py"
+                '''
             }
         }
     }
